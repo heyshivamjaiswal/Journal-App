@@ -135,6 +135,30 @@
   }
 }
 
+html,
+body {
+  overflow-x: hidden;
+}
+
 html {
-  scroll-behavior: smooth;
+  scrollbar-gutter: stable;
+}
+
+body {
+  overflow-y: scroll;
+}
+
+.ql-container {
+  min-height: 80vh;
+  height: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.ql-editor {
+  height: 100%;
+  flex: 1;
+  overflow-y: auto;
+  width: 100%;
 }

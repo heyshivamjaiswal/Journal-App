@@ -9,7 +9,7 @@ const UserMenu = () => {
     <UserButton
       appearance={{
         elements: {
-          avatarBox: 'w-20 h-20',
+          avatarBox: 'w-10 h-10',
         },
       }}
     >

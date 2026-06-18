@@ -1,58 +1,56 @@
 'use client';
 
-import { SignInButton, SignUpButton, UserButton, Show } from '@clerk/nextjs';
 import Image from 'next/image';
 import Link from 'next/link';
+
+import { SignInButton, useUser } from '@clerk/nextjs';
+
 import { Button } from './ui/button';
-import { PenBox } from 'lucide-react';
-import { FolderOpen } from 'lucide-react';
+import { FolderOpen, PenBox } from 'lucide-react';
 import UserMenu from './user-menu';
 
-const Header = () => {
+export default function Header() {
+  const { isSignedIn } = useUser();
+
   return (
     <header className="container mx-auto">
       <nav className="py-6 px-4 flex justify-between items-center">
-        <Link href={'/'}>
+        <Link href="/">
           <Image
-            src={'/logo.png'}
-            alt="Reflct Logo"
+            src="/logo.png"
+            alt="Reflect Logo"
             width={200}
             height={60}
             className="h-10 w-auto object-contain"
           />
         </Link>
+
         <div className="flex items-center gap-4">
-          {/* login and other ctas */}
+          {isSignedIn ? (
+            <>
+              <Link href="/dashboard#collections">
+                <Button variant="outline" className="flex items-center gap-2">
+                  <FolderOpen size={18} />
+                  <span className="hidden md:inline">Collections</span>
+                </Button>
+              </Link>
 
-          <SignInButton>
-            <Link href="/dashboard#collections">
-              <Button variant="journal" className="flex items-center gap-2">
-                <FolderOpen size={18} />
-                <span className="hidden md:inline">Collections</span>
-              </Button>
-            </Link>
-          </SignInButton>
+              <Link href="/journal/write">
+                <Button variant="journal" className="flex items-center gap-2">
+                  <PenBox size={18} />
+                  <span className="hidden md:inline">Write New</span>
+                </Button>
+              </Link>
 
-          <Link href="/journal/write">
-            <Button variant="journal" className="flex items-center gap-2">
-              <PenBox size={18} />
-              <span className="hidden md:inlien">Write New</span>
-            </Button>
-          </Link>
-
-          <SignUpButton>
-            {/* <SignInButton forceRedirectUrl="/dashboard"> */}
-            <Button variant="outline">Login</Button>
-            {/* </SignInButton> */}
-          </SignUpButton>
-
-          <SignInButton>
-            <UserMenu />
-          </SignInButton>
+              <UserMenu />
+            </>
+          ) : (
+            <SignInButton forceRedirectUrl="/dashboard">
+              <Button variant="outline">Login</Button>
+            </SignInButton>
+          )}
         </div>
       </nav>
     </header>
   );
-};
-
-export default Header;
+}
