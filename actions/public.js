@@ -2,15 +2,30 @@
 
 import { revalidateTag, unstable_cache } from 'next/cache';
 
-export async function getPixabayImage(query) {
+export async function getUnsplashImage(query) {
+  console.log('UNSPLASH KEY:', process.env.UNSPLASH_ACCESS_KEY);
+
   try {
     const res = await fetch(
-      `https://pixabay.com/api/?q=${query}&key=${process.env.PIXABAY_API_KEY}&min_width=1280&min_height=720&image_type=illustration&category=feelings`
+      `https://api.unsplash.com/search/photos?query=${encodeURIComponent(
+        query
+      )}&per_page=1&orientation=landscape`,
+      {
+        headers: {
+          Authorization: `Client-ID ${process.env.UNSPLASH_ACCESS_KEY}`,
+        },
+      }
     );
+
+    if (!res.ok) {
+      return null;
+    }
+
     const data = await res.json();
-    return data.hits[0]?.largeImageURL || null;
+
+    return data.results?.[0]?.urls?.regular || null;
   } catch (error) {
-    console.error('Pixabay API Error:', error);
+    console.error('Unsplash Error:', error);
     return null;
   }
 }

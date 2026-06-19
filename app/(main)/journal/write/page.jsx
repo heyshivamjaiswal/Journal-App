@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
@@ -23,23 +23,42 @@ import useFetch from '@/hooks/use-hooks';
 import { createJournalEntry } from '@/actions/journal';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { createCollection, getCollections } from '@/actions/collection';
+import CollectionForm from '@/components/collection-dialog';
 
 const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
 
 const JournalEntryPage = () => {
+  const [isCollectionDialogOpen, setIsCollectionDialogOpen] = useState(false);
+
   const {
     loading: actionLoading,
     fn: actionFn,
     data: actionResult,
   } = useFetch(createJournalEntry);
 
+  const {
+    loading: collectionLoading,
+    data: collections,
+    fn: fetchCollections,
+  } = useFetch(getCollections);
+
+  const {
+    loading: createCollectionLoading,
+    data: createdCollection,
+    fn: createCollectionsFn,
+  } = useFetch(createCollection);
+
   const router = useRouter();
+
+  console.log(collections, 'collections');
 
   const {
     register,
     handleSubmit,
     watch,
     control,
+    setValue,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(journalSchema),
@@ -51,7 +70,9 @@ const JournalEntryPage = () => {
     },
   });
 
-  const isLoading = actionLoading;
+  useEffect(() => {
+    fetchCollections();
+  }, []);
 
   useEffect(() => {
     if (actionResult && !actionLoading) {
@@ -71,6 +92,21 @@ const JournalEntryPage = () => {
       moodQuery: mood.pixabayQuery,
     });
   });
+
+  useEffect(() => {
+    if (createCollection) {
+      setIsCollectionDialogOpen(false);
+      fetchCollections();
+      setValue('collectionId', createCollection.id);
+      toast.success(`Collection ${createCollection.name} created!`);
+    }
+  }, [createdCollection]);
+
+  const handleCreateCollection = async (data) => {
+    createCollectionsFn(data);
+  };
+
+  const isLoading = actionLoading || collectionLoading;
 
   return (
     <div className="py-8">
@@ -167,13 +203,43 @@ const JournalEntryPage = () => {
             Add to collection (Optional)
           </label>
 
-          {/* <Controller
-            name="content"
+          <Controller
+            name="collectionId"
             control={control}
-            render={({ field }) => (
+            render={({ field }) => {
+              return (
+                <Select
+                  onValueChange={(value) => {
+                    if (value === 'new') {
+                      setIsCollectionDialogOpen(true);
+                    } else {
+                      field.onChange(value);
+                    }
+                  }}
+                  value={field.value}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose a collection..." />
+                  </SelectTrigger>
 
-            )}
-          /> */}
+                  <SelectContent className="max-h-64" position="popper">
+                    {collections?.map((collection) => (
+                      <SelectItem key={collection.id} value={collection.id}>
+                        <span className="flex items-center gap-2">
+                          {collection.name}
+                        </span>
+                      </SelectItem>
+                    ))}
+                    <SelectItem value="new">
+                      <span className="text-orange-600">
+                        + Create New Collections
+                      </span>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              );
+            }}
+          />
           {errors.collectionId && (
             <p className="text-red-500 text-sm">
               {errors.collectionId.message}
@@ -182,11 +248,18 @@ const JournalEntryPage = () => {
         </div>
 
         <div className="space-y-4 flex">
-          <Button type="submit" variant="journal">
+          <Button type="submit" variant="journal" disabled={actionLoading}>
             Publish
           </Button>
         </div>
       </form>
+
+      <CollectionForm
+        loading={createCollectionLoading}
+        onSuccess={handleCreateCollection}
+        open={isCollectionDialogOpen}
+        setOpen={setIsCollectionDialogOpen}
+      />
     </div>
   );
 };
