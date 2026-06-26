@@ -7,7 +7,7 @@ const Dashboard = async () => {
   const collections = await getCollections();
   const entriesData = await getJournalEntries();
 
-  // Group entries by collection
+ 
   const entriesByCollection = entriesData?.data?.entries?.reduce(
     (acc, entry) => {
       const collectionId = entry.collectionId || 'unorganized';
